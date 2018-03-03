@@ -14,7 +14,7 @@ class HomeNavigationController: UINavigationController, HomeCoordinator {
 
 	private lazy var homeViewController: UIViewController = {
 		let controller = HomeViewController(coordinator: self)
-		controller.title = "Health Tool Box"
+		controller.title = "Health Toolbox"
 		return controller
 	}()
 

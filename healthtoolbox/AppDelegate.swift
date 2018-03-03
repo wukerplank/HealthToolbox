@@ -6,16 +6,50 @@
 //  Copyright © 2018 Wukerplank. All rights reserved.
 //
 
+import HealthKit
 import UIKit
+import Swinject
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
 	var window: UIWindow?
+	let container: Container = {
+		let container = Container()
+		container.register(HKHealthStore.self) { _ in HKHealthStore() }
 
+		container.register(HealthKitDataGenerator.self) { r in
+			let generator = HealthKitDataGenerator()
+			generator.healthStore = r.resolve(HKHealthStore.self)
+			return generator
+		}
+
+		container.register(GenerateDataViewController.self) { r in
+			let controller = GenerateDataViewController()
+			controller.healthStore = r.resolve(HKHealthStore.self)
+			controller.dataGenerator = r.resolve(HealthKitDataGenerator.self)
+			return controller
+		}
+
+		container.register(HomeNavigationController.self) { r in
+			let controller = HomeNavigationController()
+			controller.generateDataViewController = r.resolve(GenerateDataViewController.self)
+			return controller
+		}
+
+		return container
+	}()
+
+	private var healthStore = HKHealthStore()
 
 	func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
-		// Override point for customization after application launch.
+
+		let rootViewController = container.resolve(HomeNavigationController.self)
+
+		window = UIWindow.init(frame: UIScreen.main.bounds)
+		window?.rootViewController = rootViewController
+		window?.makeKeyAndVisible()
+
 		return true
 	}
 

@@ -11,8 +11,41 @@ import HealthKit
 
 class GenerateDataViewController: FormViewController {
 
+	private enum State {
+		case initial
+		case success(sampleCount: Int)
+		case working
+		case error(Error)
+	}
+
 	var dataGenerator: HealthKitDataGenerator!
 	var healthStore: HKHealthStore!
+	private var state: State = .initial {
+		didSet {
+
+			// Button status
+			switch state {
+			case .initial, .success(_), .error:
+				self.generateButton.disabled = Condition.init(booleanLiteral: false)
+				self.generateButton.evaluateDisabled()
+			case .working:
+				self.generateButton.disabled = Condition.init(booleanLiteral: true)
+				self.generateButton.evaluateDisabled()
+			}
+
+			// Other
+			switch state {
+			case .initial:
+				break
+			case .success(let sampleCount):
+				self.informUser(title: "Success", message: "Created \(sampleCount) samples in Health")
+			case .working:
+				break
+			case .error(let error):
+				self.informUser(title: "Error", message: error.localizedDescription)
+			}
+		}
+	}
 
 	private lazy var startTimeRow = DateTimeRow { row in
 		row.title = "Start time"
@@ -26,7 +59,18 @@ class GenerateDataViewController: FormViewController {
 
 	private lazy var cgmSwitch = SwitchRow { row in
 		row.title = "CGM"
+		row.tag = "cgmSwitch"
 		row.value = true
+	}
+
+	private lazy var cgmDevice = PushRow<CGMDevice> { row in
+		row.title = "CGM device"
+		row.hidden = "$cgmSwitch == false"
+		row.options = CGMDevice.knownDevices
+		row.value = CGMDevice.knownDevices.first
+		row.displayValueFor = { value in
+			return value?.name
+		}
 	}
 
 	private lazy var carbsSwitch = SwitchRow { row in
@@ -46,30 +90,19 @@ class GenerateDataViewController: FormViewController {
 		}
 	}
 
-	private var cgmDevice: CGMDevice {
-		return CGMDevice(
-			name: "Health Kit Toolbox",
-			manufacturer: "Wukerplank",
-			model: "MARK I",
-			hardwareVersion: "0.1",
-			firmwareVersion: "0.1",
-			softwareVersion: "0.1",
-			localIdentifier: "ab0d94b5-5e53-4d88-9596-f7625c34ea1f",
-			udiDeviceIdentifier: "018ed618-5ecb-40db-ad9e-7ae7fbd8fbbe"
-		)
-	}
-
 	private var configuration: GeneratorConfiguration {
 		return GeneratorConfiguration(
 			startDate: self.startTimeRow.value!,
 			endDate: self.endTimeRow.value!,
 			cgm: self.cgmSwitch.value!,
 			cgmInterval: 300,
-			cgmDevice: self.cgmDevice,
+			cgmDevice: self.cgmDevice.value!,
 			carbs: self.carbsSwitch.value!,
 			steps: self.stepsSwitch.value!
 		)
 	}
+
+
 
 	init() {
 		super.init(nibName: nil, bundle: nil)
@@ -90,9 +123,15 @@ class GenerateDataViewController: FormViewController {
 		])
 		self.form.append(timeRangeSection)
 
+		let cgmSection = Section("CGM")
+		cgmSection.append(contentsOf: [
+			self.cgmSwitch,
+			self.cgmDevice,
+		])
+		self.form.append(cgmSection)
+
 		let dataTypesSection = Section("Data")
 		dataTypesSection.append(contentsOf: [
-			self.cgmSwitch,
 			self.carbsSwitch,
 			self.stepsSwitch,
 		])
@@ -117,6 +156,14 @@ class GenerateDataViewController: FormViewController {
 	}
 
 	private func startDataGeneration() {
-		self.dataGenerator.generateData(for: self.configuration)
+
+		self.state = .working
+
+		self.dataGenerator.generateData(for: self.configuration, onError: { error in
+			self.state = .error(error)
+		}, onSuccess: { sampleCount in
+			print("Successfully created \(sampleCount) measurements")
+			self.state = .success(sampleCount: sampleCount)
+		})
 	}
 }

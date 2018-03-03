@@ -9,32 +9,6 @@
 import Foundation
 import HealthKit
 
-struct CGMDevice {
-	let name: String?
-	let manufacturer: String?
-	let model: String?
-	let hardwareVersion: String?
-	let firmwareVersion: String?
-	let softwareVersion: String?
-	let localIdentifier: String? // e.g. Bluetooth device ID
-	let udiDeviceIdentifier: String? // FDA identifier
-
-	var healthKitDevice: HKDevice {
-		return HKDevice(name: self.name, manufacturer: self.manufacturer, model: self.model, hardwareVersion: self.hardwareVersion, firmwareVersion: self.firmwareVersion, softwareVersion: self.softwareVersion, localIdentifier: self.localIdentifier, udiDeviceIdentifier: self.udiDeviceIdentifier)
-	}
-}
-
-struct GeneratorConfiguration {
-	let startDate: Date
-	let endDate: Date
-	let cgm: Bool
-	let cgmInterval: TimeInterval
-	let cgmDevice: CGMDevice
-
-	let carbs: Bool
-	let steps: Bool
-}
-
 class HealthKitDataGenerator {
 
 	var healthStore: HKHealthStore!
@@ -43,8 +17,29 @@ class HealthKitDataGenerator {
 		return HKUnit.gramUnit(with: .milli).unitDivided(by: HKUnit.literUnit(with: .deci))
 	}()
 
-	func generateData(for configuration: GeneratorConfiguration) {
+	func generateData(for configuration: GeneratorConfiguration, onError: ((Error) -> Void)? = nil, onSuccess: ((Int) -> Void)? = nil) {
 
+		var samples = [HKQuantitySample]()
+
+		if configuration.cgm {
+			samples += self.generateCGMData(for: configuration)
+		}
+
+		self.healthStore.save(samples) { success, error in
+			if success {
+				DispatchQueue.main.async {
+					onSuccess?(samples.count)
+				}
+			}
+			else if let error = error {
+				DispatchQueue.main.async {
+					onError?(error)
+				}
+			}
+		}
+	}
+
+	private func generateCGMData(for configuration: GeneratorConfiguration) -> [HKQuantitySample] {
 		var samples = [HKQuantitySample]()
 
 		var nextDate = configuration.startDate
@@ -69,17 +64,10 @@ class HealthKitDataGenerator {
 			nextDate.addTimeInterval(configuration.cgmInterval)
 		}
 
-		self.healthStore.save(samples) { success, error in
-			if success {
-				print("Successfully created \(samples.count) measurements")
-			}
-			else if let error = error {
-				print("Error creating samples: \(error)")
-			}
-		}
+		return samples
 	}
 
-	func bloodGlucoseValue(for time: TimeInterval) -> Double {
+	private func bloodGlucoseValue(for time: TimeInterval) -> Double {
 
 		let amplitude = 75.0
 		let offset = 125.0

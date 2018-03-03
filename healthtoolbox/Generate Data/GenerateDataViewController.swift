@@ -38,7 +38,7 @@ class GenerateDataViewController: FormViewController {
 			switch state {
 			case .working:
 				let hud = MBProgressHUD.showAdded(to: self.view, animated: true)
-				hud.backgroundColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0.1)
+				hud.backgroundColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0.3)
 			case .success(_), .error(_), .initial:
 				MBProgressHUD.hide(for: self.view, animated: true)
 			}

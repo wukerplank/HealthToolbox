@@ -44,6 +44,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 	func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
 
+		let navbarBackground = UIColor(red: 1.0, green: 0.83, blue: 0.42, alpha: 1.00)
+		let navbarTint = UIColor(red: 0.98, green: 0.42, blue: 0.40, alpha: 1.00)
+
+		UINavigationBar.appearance().tintColor = navbarTint
+		UINavigationBar.appearance().barTintColor = navbarBackground
+		UINavigationBar.appearance().largeTitleTextAttributes = [NSAttributedStringKey.foregroundColor: navbarTint]
+		UINavigationBar.appearance().titleTextAttributes = [NSAttributedStringKey.foregroundColor: navbarTint]
+
 		let rootViewController = container.resolve(HomeNavigationController.self)
 
 		window = UIWindow.init(frame: UIScreen.main.bounds)

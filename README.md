@@ -20,5 +20,5 @@ Install the dependencies:
 - [ ] Generate steps data
 - [ ] Create and export a dump of Health data
 - [ ] Import Health data dumps
-- [ ] Integrate DropBoxand
+- [ ] Integrate DropBox
 - [ ] Integrate iCloud drive

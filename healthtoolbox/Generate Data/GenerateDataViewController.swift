@@ -8,6 +8,7 @@
 
 import Eureka
 import HealthKit
+import MBProgressHUD
 
 class GenerateDataViewController: FormViewController {
 
@@ -33,14 +34,21 @@ class GenerateDataViewController: FormViewController {
 				self.generateButton.evaluateDisabled()
 			}
 
+			// Progress
+			switch state {
+			case .working:
+				let hud = MBProgressHUD.showAdded(to: self.view, animated: true)
+				hud.backgroundColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0.1)
+			case .success(_), .error(_), .initial:
+				MBProgressHUD.hide(for: self.view, animated: true)
+			}
+
 			// Other
 			switch state {
-			case .initial:
+			case .initial, .working:
 				break
 			case .success(let sampleCount):
 				self.informUser(title: "Success", message: "Created \(sampleCount) samples in Health")
-			case .working:
-				break
 			case .error(let error):
 				self.informUser(title: "Error", message: error.localizedDescription)
 			}

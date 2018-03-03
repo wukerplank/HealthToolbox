@@ -7,6 +7,7 @@ target 'healthtoolbox' do
 
   # Pods for healthtoolbox
   pod 'Eureka'
+  pod 'MBProgressHUD'
   pod 'Swinject'
 
   target 'healthtoolboxTests' do

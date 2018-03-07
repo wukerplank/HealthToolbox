@@ -20,7 +20,9 @@ class HomeNavigationController: UINavigationController, HomeCoordinator {
 
 	init() {
 		super.init(nibName: nil, bundle: nil)
-		self.navigationBar.prefersLargeTitles = true
+		if #available(iOS 11.0, *) {
+			self.navigationBar.prefersLargeTitles = true
+		}
 		self.viewControllers = [self.homeViewController]
 	}
 	

@@ -49,7 +49,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 		UINavigationBar.appearance().tintColor = navbarTint
 		UINavigationBar.appearance().barTintColor = navbarBackground
-		UINavigationBar.appearance().largeTitleTextAttributes = [NSAttributedStringKey.foregroundColor: navbarTint]
+		if #available(iOS 11.0, *) {
+			UINavigationBar.appearance().largeTitleTextAttributes = [NSAttributedStringKey.foregroundColor: navbarTint]
+		}
 		UINavigationBar.appearance().titleTextAttributes = [NSAttributedStringKey.foregroundColor: navbarTint]
 
 		let rootViewController = container.resolve(HomeNavigationController.self)
